@@ -1,13 +1,13 @@
 # a simple udp socket service #
 
-dev env: debian 9 and ubuntu 22.04(WSL) with thier latest gcc from apt-get
+dev env: debian 9 and ubuntu 22.04(via WSL) with their latest gcc from apt-get
 
 ## build and run server ##
 ```
 $ gcc server.c -o server.o
 ```
 
-usage: server <port>
+usage: server &lt;port&gt;
 ```
 $ server.o 65432
 ``` 
@@ -18,7 +18,7 @@ may need -lm option to gcc compiler for libm.a
 $ gcc client.c -o client.o -lm
 ```
 
-usage: client <ip> <port>
+usage: client &lt;ip&gt; &lt;port&gt;
 ```
 $ client.o 10.0.0.10 65432 
 ```
