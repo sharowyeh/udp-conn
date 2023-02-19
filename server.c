@@ -12,7 +12,14 @@
 #define BUFSIZE 1024
 
 // just a simple udp echo service
-int main(int argc, char* argv) {
+int main(int argc, char **argv) {
+	// specify port number or just use default 65432
+	unsigned short port_no = PORT;
+	if (argc > 1) {
+		port_no = atoi(argv[1]);
+	}
+	printf("use port %d\n", port_no);
+
 	int socket_fd;
 	int client_length;
 	struct sockaddr_in server_addr;
@@ -33,11 +40,11 @@ int main(int argc, char* argv) {
 	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR,
 			(const void *)&optval, sizeof(int));
 
-	// ok with bzero but prefer memset more generic for my usage
+	// ok if bzero or bxxx, but I like more generic memset or memxxx if not specify
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	server_addr.sin_port = htons((unsigned short)PORT);
+	server_addr.sin_port = htons(port_no);
 
 	if (bind(socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
 		printf("bind fd error");
@@ -56,11 +63,13 @@ int main(int argc, char* argv) {
 			exit(1);
 		}
 
+		char host_name[128] = {0};
 		host_info = gethostbyaddr((const char *)&client_addr.sin_addr.s_addr,
 				sizeof(client_addr.sin_addr.s_addr), AF_INET);
-		if (host_info == NULL) {
-			printf("get host from client error");
-			exit(1);
+		// not all clients provide proper info, like env behind virtualization
+		if (host_info != NULL) {
+			memcpy(host_name, host_info->h_name, strlen(host_info->h_name));
+			//TODO: cpy length better from min(a,b)
 		}
 
 		host_addr_str = inet_ntoa(client_addr.sin_addr);
@@ -69,7 +78,7 @@ int main(int argc, char* argv) {
 			exit(1);
 		}
 
-		printf("client: %s(%s)\n", host_info->h_name, host_addr_str);
+		printf("client: %s(%s)\n", host_name, host_addr_str);
 		printf("data: %d/%d bytes: %s\n", strlen(buf), msg_length, buf);
 
 		msg_length = sendto(socket_fd, buf, strlen(buf), 0,
